@@ -15,7 +15,7 @@ import sys
 import numpy as np
 import json
 import re
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import pandas as pd
 
 # NLTK Stop words library
@@ -26,7 +26,7 @@ stop_words.extend(['from', '<3', 'subject', 're', 'edu', 'use', 'nan', 'be', 'wo
                    'will', 'can', 'shall', 'https', 'could', "be", "#", "dem", "dat", "http", "www"])
 
 # spacy library
-# from nltk import word_tokenize, pos_tag
+from nltk import word_tokenize, pos_tag
 spacy_nlp = spacy.load('en_core_web_lg')
 spacy_stopwords = spacy.lang.en.stop_words.STOP_WORDS
 TEMP_FOLDER = tempfile.gettempdir()
@@ -138,22 +138,12 @@ def preprocessing(text):
 ''' Main function for getting the topic model chart:'''
 
 
-def topic_models(allposts, groups):
+def topic_models(data):
 
-    if allposts == None and groups == None:
+    if data == None:
         return {'ids': [], 'parents': [], 'labels': []}
-    data = []
-    days_before = (datetime.today()-timedelta(days=180)).isoformat()
-    for post in allposts:
-        data.append(post["message"])
-        if post['created_time'] >= days_before:
-            data.append(post["message"])
-    for group in groups:
-        data.append(group["name"])
 
     ''' Data Cleaning:'''
-    if len(data)>100:
-        data = data[:100]
     # Remove Emails
     data = [re.sub(r'\S*@\S*\s?', ' ', sent) for sent in data]
 
@@ -194,43 +184,28 @@ def topic_models(allposts, groups):
     # travelling: wanderlust,
     '''give seed words'''
     apriori_harder = {
-        'travel': 0, 'mountain': 0, 'place': 0, 'beach': 0, 'hill': 0, 'sun': 0, 'ride': 0, 'car': 0, 'hike': 0, 'hotel': 0, 'arizona': 0, 'tempe': 0, 'water': 0, 'climb': 0, 'journey': 0, 'passerby': 0, 'holiday': 0, 'USA': 0, 'america': 0, 'Everest': 0, 'nature': 0, 'trek': 0, 'walk': 0, 'terrain': 0, 'traveller': 0, 'destination': 0, 'adventure': 0, 'trip': 0, 'itinerary': 0, 'naturelover': 0, 'peaceful': 0, 'beautiful': 0, 'routes': 0, 'restaurant': 0, 'resort': 0, 'picnic': 0, 'greenery': 0, 'plants': 0, 'food': 0, 'energized': 0, 'breathtaking': 0, 'view': 0, 'Mountaineering': 0, 'Hiking': 0, 'Biking': 0, 'Driving': 0, 'trekking': 0, 'diving': 0, 'rome': 0,
-        'game': 1, 'team': 1, 'win': 1, 'play': 1, 'season': 1, 'second': 1, 'victory': 1, 'sports': 1, 'cycle': 1, 'archer': 1, 'fence': 1, 'goal': 1, 'ball': 1, 'triathlon': 1, 'basketball': 1, 'baseball': 1, 'football': 1, 'base': 1, 'love': 1, 'passion': 1, 'Slams': 1, 'tennis': 1, 'ranking': 1, 'rank': 1, 'gymnastics': 1, 'gymnast': 1, 'aerobics': 1, 'innings': 1, 'runs': 1, 'catch': 1, 'quaterback': 1, 'played': 1, 'lead': 1, 'hits': 1, 'soccer': 1, 'umpire': 1, 'goalkeeper': 1, 'bat': 1, 'racquet': 1, 'ping-pong': 1, 'played': 1, 'pitch': 1, 'field': 1, 'scratch': 1, 'table tennis': 1, 'strikeout': 1,
-        'merry': 2, 'christmas': 2, 'halloween': 2, 'mardi gras': 2, 'thanksgiving': 2, 'Coachella': 2, 'Sundance': 2, 'Burning Man': 2, 'Easter': 2, 'family': 2, 'sister': 2, 'couple': 2, 'mother': 2, 'love': 2, 'heart': 2, 'passion': 2, 'brother': 2, 'house': 2, 'household': 2, 'miss': 2, 'buddies': 2, 'friends': 2, 'hopes': 2, 'dreams': 2, 'aspirations': 2, 'fun': 2, 'time': 2, 'mom': 2, 'relationship': 2, 'home': 2, 'soar': 2, 'aim': 2, 'beautiful': 2, 'free': 2,
-        'food': 3, 'eat': 3, 'fun': 3, 'chicken': 3, 'hungry': 3, 'starving': 3, 'muffins': 3, 'meat': 3, 'vegetarian': 3, 'non-veg': 3, 'chicken': 3, 'dish': 3, 'salad': 3, 'foodgasm': 3, 'coffee': 3, 'starbucks': 3, 'burgers': 3, 'pizza': 3, 'starved': 3, 'green': 3, 'boil': 3, 'heat': 3, 'restro': 3, 'restaurant': 3, 'gulp': 3, 'health': 3, 'healthy': 3, 'cancer': 3, 'disease': 3, 'migraine': 3, 'headache': 3, 'unwell': 3, 'fine': 3, 'feel': 3, 'nausea': 3, 'body': 3, 'exercise': 3, 'diet': 3, 'puke': 3, 'ill': 3, 'workout': 3, 'fitness': 3, 'cramps': 3, 'woman': 3, 'periods': 3, 'unfit': 3, 'unhealthy': 3, 'healthy': 3, 'eyes': 3,
-        'music': 4, 'karoake': 4, 'song': 4, 'jazz': 4, 'blues': 4, 'rock': 4, 'hip hop': 4, 'metal': 4, 'rhythm': 4, 'country': 4, 'soundtrack': 4, 'instrumental': 4, 'progressive': 4, 'acoustic': 4, 'vocal': 4, 'techno': 4, 'romantic': 4, 'rap': 4, 'dub': 4, 'violin': 4, 'guitar': 4, 'instruments': 4, 'listen': 4, 'radio': 4, 'jam': 4, 'jamming': 4, 'spotify': 4, 'apple music': 4, 'pop': 4, 'play': 4, 'perform': 4,
-        'writer': 4, 'write': 4, 'novel': 4, 'sing': 4, 'vocal': 4, 'like': 4, 'book': 4, 'draw': 4, 'paint': 4, 'art': 4, 'drum': 4, 'violin': 4, 'guitar': 4, 'guitarist': 4, 'dancer': 4, 'dance': 4, 'climber': 4, 'ballet': 4, 'painter': 4, 'teach': 4, 'teacher': 4, 'photo': 4, 'click': 4, 'photography': 4, 'read': 4, 'create': 4, 'creative': 4,
-        'youtube': 5, 'facebook': 5, 'netflix': 5, 'social': 5, 'media': 5, 'videos': 5, 'instagram': 5, 'snapchat': 5, 'chat': 5, 'spotify': 5, 'apple': 5, 'tinder': 5, 'linkedin': 5, 'likes': 5, 'cyber': 5, 'DM': 5, 'ping': 5, 'html': 5, 'www': 5, 'direct messaging': 5,
-        'kill': 6, 'dead': 6, 'dying': 6, 'violence': 6, 'guns': 6, 'bully': 6, 'cyber': 6, 'depression': 6, 'sad': 6, 'angry': 6, 'hurt': 6, 'accident': 6, 'racist': 6, 'apologize': 6, 'delay': 6, 'wounded': 6, 'hurtful': 6, 'wound': 6, 'blood': 6, 'needs': 6, 'lies': 6, 'emergency': 6, 'woeful': 6, 'plight': 6, 'sexual': 6, 'hatred': 6, 'assault': 6, 'perpetrators': 6, 'fake': 6, 'Negative': 6, 'vile': 6, 'evil': 6, 'trouble': 6, 'dark': 6,
-        'code': 7, 'science': 7, 'tech': 7, 'technology': 7, 'gadgets': 7, 'invent': 7, 'discover': 7, 'program': 7, 'geek': 7, 'earphone': 7, 'headphone': 7, 'specification': 7, 'specs': 7,
-        'climate': 7, 'earth': 7, 'school': 7, 'university': 7, 'engineering': 7, 'skill': 7, 'riordan': 7, 'studies': 7, 'study': 7, 'opinions': 7, 'degrees': 7, 'service': 7, 'help': 7, 'assignment': 7, 'supernatural': 7,
-        'israel': 8, 'war': 8, 'soldier': 8, 'lebanese': 8, 'greek': 8, 'veteran': 8, 'politics': 8, 'speech': 8, 'leaders': 8, 'issue': 8, 'army': 8, 'military': 8, 'doctrine': 8, 'world': 8, 'Bravo': 8, 'Navy': 8, 'Marine': 8
+        'beach': 0, 'hill': 0, 'sun': 0, 'ride': 0, 'car': 0, 'hike': 0, 'hotel': 0, 'arizona': 0, 'tempe': 0,
+        'basketball': 1, 'baseball': 1, 'football': 1, 'base': 1, 'love': 1, 'passion': 1, 'Slams': 1, 'tennis': 1, 'ranking': 1, 'rank': 1, 'gymnastics': 1, 
+        'mardi gras': 2, 'thanksgiving': 2, 'Coachella': 2, 'Sundance': 2, 'Burning Man': 2, 'Easter': 2, 
+        'food': 3, 'eat': 3, 'fun': 3, 'chicken': 3, 'hungry': 3, 'starving': 3, 'muffins': 3, 'meat': 3, 'vegetarian': 3, 'non-veg': 3, 'chicken': 3, 
+        'writer': 4, 'write': 4, 'novel': 4, 'sing': 4, 'vocal': 4, 'like': 4, 'book': 4, 'draw': 4, 'paint': 4, 'art': 4, 'drum': 4, 'violin': 4, 'guitar': 4,
     }
 
     '''Create the dictionary of the seed words corpus'''
 
     dictionary2 = gensim.corpora.Dictionary(
-        [['travel', 'mountain', 'place', 'beach', 'hill', 'sun', 'ride', 'car', 'hike', 'hotel', 'arizona', 'tempe', 'water', 'climb', 'journey', 'passerby', 'holiday', 'USA', 'america', 'Everest', 'nature', 'trek', 'walk', 'terrain', 'traveller', 'destination', 'adventure', 'trip', 'itinerary', 'naturelover', 'peaceful', 'beautiful', 'routes', 'restaurant', 'resort', 'picnic', 'greenery', 'plants', 'food', 'energized', 'breathtaking', 'view', 'Mountaineering', 'Hiking', 'Biking', 'Driving', 'trekking', 'diving', 'rome'],
-         ['game', 'team', 'win', 'play', 'season', 'second', 'victory', 'sports', 'cycle', 'archer', 'fence', 'goal', 'training', 'ball', 'triathlon', 'basketball', 'baseball', 'football', 'base', 'love', 'passion', 'Slams', 'tennis', 'ranking', 'rank',
-             'gymnastics', 'gymnast', 'aerobics', 'innings', 'runs', 'catch', 'quaterback', 'played', 'lead', 'hits', 'soccer', 'umpire', 'goalkeeper', 'bat', 'racquet', 'ping-pong', 'played', 'pitch', 'field', 'scratch', 'table tennis', 'strikeout'],
-            ['merry', 'christmas', 'halloween', 'mardi gras', 'thanksgiving', 'Coachella', 'Sundance', 'Burning Man', 'Easter', 'family', 'sister', 'couple', 'mother', 'love', 'heart', 'passion',
-                'brother', 'house', 'household', 'miss', 'buddies', 'friends', 'hopes', 'dreams', 'aspirations', 'fun', 'time', 'mom', 'relationship', 'home', 'soar', 'aim', 'beautiful', 'free'],
-         ['food', 'eat', 'chicken', 'hunger', 'fun', 'starve', 'muffins', 'meat', 'vegetarian', 'non-veg', 'chicken', 'dish', 'salad', 'foodgasm', 'coffee', 'starbucks', 'burgers', 'pizza', 'starved', 'green', 'boil', 'heat', 'restro', 'restaurant',
-             'gulp', 'health', 'healthy', 'cancer', 'disease', 'migraine', 'headache', 'unwell', 'fine', 'feel', 'nausea', 'body', 'exercise', 'diet', 'puke', 'ill', 'workout', 'fitness', 'cramps', 'woman', 'periods', 'unfit', 'unhealthy', 'healthy', 'eyes'],
-         ['music', 'karoake', 'song', 'jazz', 'blues', 'rock', 'hip hop', 'metal', 'rhythm', 'country', 'soundtrack', 'instrumental', 'progressive', 'acoustic', 'vocal', 'techno', 'romantic', 'rap', 'dub', 'violin', 'guitar', 'instruments', 'listen', 'radio', 'jam', 'jamming', 'spotify',
-             'apple music', 'pop', 'play', 'perform', 'writer', 'write', 'novel', 'sing', 'vocal', 'like', 'book', 'draw', 'paint', 'art', 'drum', 'violin', 'guitar', 'guitarist', 'dancer', 'dance', 'climber', 'ballet', 'painter', 'teach', 'teacher', 'photo', 'click', 'photography'],
-            ['youtube', 'facebook', 'netflix', 'social', 'media', 'videos', 'instagram', 'snapchat', 'chat',
-                'spotify', 'apple', 'tinder', 'linkedin', 'likes', 'cyber', 'dm', 'ping', 'www', 'direct messaging'],
-            ['kill', 'dead', 'dying', 'violence', 'guns', 'bully', 'cyber', 'depression', 'sad', 'angry', 'hurt', 'accident', 'racist', 'apologize', 'delay', 'wounded', 'hurtful',
-                'wound', 'blood', 'needs', 'lies', 'emergency', 'woeful', 'plight', 'sexual', 'hatred', 'assault', 'perpetrators', 'fake', 'Negative''vile', 'evil', 'trouble', 'dark'],
-            ['code', 'science', 'tech', 'technology', 'gadgets', 'invent', 'discover', 'program', 'geek', 'earphone', 'headphone', 'specification', 'specs', 'climate',
-                'earth', 'school', 'university', 'engineering', 'skill', 'riordan', 'studies', 'study', 'opinions', 'degrees', 'service', 'help', 'assignment', 'supernatural'],
-            ['israel', 'war', 'soldier', 'lebanese', 'greek', 'veteran', 'politics', 'speech', 'leaders', 'issue', 'army', 'military', 'doctrine', 'world', 'Bravo', 'Navy', 'Marine']])
+        [['beach', 'hill', 'sun', 'ride', 'car', 'hike', 'hotel', 'arizona', 'tempe'],
+         ['basketball', 'baseball', 'football', 'base', 'love', 'passion', 'Slams', 'tennis', 'ranking', 'rank',
+          'gymnastics'],
+         ['mardi gras', 'thanksgiving', 'Coachella', 'Sundance', 'Burning Man', 'Easter', 'family', 'sister', 'couple', 'mother', 'love', 'heart', 'passion'],
+         ['food', 'eat', 'chicken', 'hunger', 'fun', 'starve', 'muffins', 'meat', 'vegetarian', 'non-veg', 'chicken'],
+         ['writer', 'write', 'novel', 'sing', 'vocal', 'like', 'book', 'draw', 'paint', 'art', 'drum', 'violin', 'guitar'],
+            
     # ['god','evidence','believe','reason','faith','exist','bible','religion','claim','spiritual','learnings]]
 
     '''Call the training and test modules'''
-    eta = create_eta(apriori_harder, dictionary2, 9)
-    model, df_topics, topic_dict = test_eta(eta, dictionary2, 9, texts, data)
+    eta = create_eta(apriori_harder, dictionary2, 5)
+    model, df_topics, topic_dict = test_eta(eta, dictionary2, 5, texts, data)
 
     # remove unwanted characters, numbers and symbols
     df_topics['cleanDocument'] = df_topics['documents'].str.replace(
@@ -324,20 +299,13 @@ def topic_models(allposts, groups):
             main_dict['Health'] = subcategory_dict
         elif id == '4':
             main_dict['Recreation'] = subcategory_dict
-        elif id == '5':
-            main_dict['SocialMedia'] = subcategory_dict
-        elif id == '6':
-            main_dict['Naysays'] = subcategory_dict
-        elif id == '7':
-            main_dict['General'] = subcategory_dict
-        elif id == '8':
-            main_dict['Politics'] = subcategory_dict
+
 
     '''Doing it in proper format:Categories and subcategories:'''
 
     import random
-    category_list = ["Travelling", "Health", "General", "Naysays",
-                     "Sports", "Recreation", "SocialMedia", "Life", "Politics"]
+    category_list = ["Travelling", "Health",
+                     "Sports", "Recreation"]
 
     ids = []
     parents = []
@@ -375,20 +343,15 @@ def topic_models(allposts, groups):
     labels = []
     for index in range(len(ids)):
         id = ids[index]
-        if id in ['events0', 'events1', 'events2', 'events3', 'events4', 'events5', 'events6', 'events7', 'events8', 'events9']:
+        if id in ['events0', 'events1', 'events2', 'events3']:
             labels.append('Communities')
-        elif id in ['entities0', 'entities1', 'entities2', 'entities3', 'entities4', 'entities5', 'entities6', 'entities7', 'entities8', 'entities9']:
+        elif id in ['entities0', 'entities1', 'entities2', 'entities3']:
             labels.append('People')
-        elif id in ['location0', 'location1', 'location2', 'location3', 'location4', 'location5', 'location6', 'location7', 'location8', 'location9']:
+        elif id in ['location0', 'location1', 'location2', 'location3']:
             labels.append('Locations')
-        elif id in ['others0', 'others1', 'others2', 'others3', 'others4', 'others5', 'others6', 'others7', 'others8']:
+        elif id in ['others0', 'others1', 'others2', 'others3']:
             labels.append('Others')
         else:
             labels.append(id)
 
-    '''return the results for the chat'''
-    interest_chart = {'ids': [], 'parents': [], 'labels': []}
-    interest_chart['ids'] = ids
-    interest_chart['parents'] = parents
-    interest_chart['labels'] = labels
-    return interest_chart
+  
