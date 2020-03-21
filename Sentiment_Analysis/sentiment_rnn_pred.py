@@ -29,24 +29,19 @@ word_idx = json.load(open("word_idx.txt"))
 
 def get_sentiment_DL(prd_model, text_data, word_idx):
 
-    #data = "Pass the salt"
-
     live_list = []
     batchSize = len(text_data)
     live_list_np = np.zeros((56,batchSize))
     for index, row in text_data.iterrows():
-        #print (index)
         text_data_sample = text_data['text'][index]
 
         # split the sentence into its words and remove any punctuations.
         tokenizer = RegexpTokenizer(r'\w+')
         text_data_list = tokenizer.tokenize(text_data_sample)
 
-        #text_data_list = text_data_sample.split()
-
+        text_data_list = text_data_sample.split()
 
         labels = np.array(['1','2','3','4','5','6','7','8','9','10'], dtype = "int")
-        #word_idx['I']
         # get index for the live stage
         data_index = np.array([word_idx[word.lower()] if word.lower() in word_idx else 0 for word in text_data_list])
         data_index_np = np.array(data_index)
@@ -79,7 +74,7 @@ def get_sentiment_DL(prd_model, text_data, word_idx):
 
 
 if __name__ == "__main__":
-     d = "It's not just us! I am going to kill you"
+     d = "All good things will happen!"
      data = np.array([d])
      textdf = pd.DataFrame({'text': data})
      text_out = get_sentiment_DL(prd_model, textdf, word_idx)
