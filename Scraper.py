@@ -17,9 +17,9 @@ import numpy as np
 import random
 from bs4 import BeautifulSoup
 import time
-#from selenium.common.exceptions import NoSuchElementException
-#from webdriverdownloader import geckodriverDownloader
-#from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+from selenium.common.exceptions import NoSuchElementException
+from webdriverdownloader import geckodriverDownloader
+from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
 import helper
 
@@ -29,9 +29,6 @@ def fb_data(html1,profile_ID,profile_url):
     
     soup_data = BeautifulSoup(html1, "html.parser")
     newDiv = soup_data.find_all('div',attrs={'class':"_3ccb"})
-#    print(newDiv)
-
-    #each post for keeping a count
     
     post_id = 0
     
@@ -62,8 +59,6 @@ def fb_data(html1,profile_ID,profile_url):
             date = ''
         
         data.update({'createdTimeStamp': date})
-       
-        print('#################################')
         
     
 #    Post Description:
@@ -76,16 +71,13 @@ def fb_data(html1,profile_ID,profile_url):
             text = ''
 
         data.update({'postDescription': text})
-        print(text)
-        print('#################################')   
+    
         
 #     Post Links:
         
-        # external_link = dataDiv[num].find('span', {'class' : 'text_exposed_link'})
+        external_link = dataDiv[num].find('span', {'class' : 'text_exposed_link'})
         link = newDiv[num].find_all('a', href=True)
-        
         linkData = ''
-        
         if link is not None:
             for l in link:
                 if 'facebook' in l['href']:
@@ -95,9 +87,6 @@ def fb_data(html1,profile_ID,profile_url):
                     linkData = linkData + str(l['href'])
 
         print('link', linkData)
-        
-        print('#################################')
-        
         data.update({'postLinks': linkData})
         
 #       Comments on Post:
@@ -116,33 +105,22 @@ def fb_data(html1,profile_ID,profile_url):
                     comment_details['name'] = str(n.text)
                 for c in l.findAll('span', attrs = {'dir' : 'ltr' }):
                     comment_details['comment']= str(c.text)
-
-#                count= 'CommentID' + str(comment_id)
-#                post_allcomment[count] = comment_details
+               count= 'CommentID' + str(comment_id)
+               post_allcomment[count] = comment_details
                 post_allcomment.append(comment_details)
-        
-
         else:
             continue
-              
-            
-        print(post_allcomment)
-        print('#########################')
-        
         data.update({'AllComments': post_allcomment})
         
         
 #       Likes on Posts:
-        
         like = newDiv[num].find('span', {'class': '_81hb'})
 
         if like is not None:
             like = like.text
         else:
             like = '0'
-
         likes = like.rsplit(' ')
-
         like = '0'
         if len(likes) > 0:
             for l in likes:
@@ -153,14 +131,10 @@ def fb_data(html1,profile_ID,profile_url):
                         like = str(int(float(like) * 1000))
                         break
                     break
-
-        print('like', like)
         data.update({'TotalLikes': like})
-        print('#####################')
               
-              
-              
-#           Views:
+     
+#       Views:
         Views = ''
         Views = newDiv[num].find('div', attr ={'class': '_2ezg'} )
         
@@ -174,28 +148,17 @@ def fb_data(html1,profile_ID,profile_url):
                         break
         else:
             Views = str(0)
-            
-#        print(Views)
         data.update({'TotalViews': Views})
-        
-        
         scraped_Data[var] = data
        
     
-#         Write the dictionary in csv document line by line
- 
+#        Write the dictionary in csv document line by line
         newrow = [date, text, post_allcomment, like , linkData, Views]
-        print(newrow)
-        print('##################')   
+        print(newrow) 
         newmatrixcsv = np.append(newmatrixcsv, np.array([newrow]), axis=0)
-
-        
-    print(newmatrixcsv)
             
 #     Write the dictionary in JSON document
-
     helper.save_file_JSON(scraped_Data)
-        
     time.sleep(5)
     print('----------------------------------')
     return newmatrixcsv
